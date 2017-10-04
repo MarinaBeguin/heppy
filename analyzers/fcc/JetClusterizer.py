@@ -5,7 +5,7 @@ from heppy.framework.analyzer import Analyzer
 from heppy.particles.tlv.jet import Jet
 from heppy.particles.jet import JetConstituents
 
-import os 
+import os
 
 from ROOT import gSystem
 CCJetClusterizer = None
@@ -31,7 +31,8 @@ class JetClusterizer(Analyzer):
           JetClusterizer,
           output = 'jets',
           particles = 'particles_not_zed',
-          fastjet_args = dict(njets = 2)  
+          algorithm = 'ee_kt',
+          fastjet_args = dict(njets = 2)
         )
     
     @param output: name of the output collection of L{jets<heppy.particles.jet.Jet>}. 
@@ -41,11 +42,14 @@ class JetClusterizer(Analyzer):
     @param particles: name of the input collection of particle-like objects. 
       These objects should have a p4(). 
     
+    @param algorithm : jet algorithm to used.
+      You should precise which algorithm you want use. Choose between ee_kt, ee_genkt, kt or anti_kt
+ 
     @param fastjet_args: fastjet arguments. 
       you should provide either one or the other of the following arguments:
        - ptmin : pt threshold in GeV for exclusive jet reconstruction 
        - njets : number of jets for inclusive jet reconstruction 
-       
+
     '''
 
     def __init__(self, *args, **kwargs):
@@ -53,22 +57,26 @@ class JetClusterizer(Analyzer):
         args = self.cfg_ana.fastjet_args
         self.clusterize = None
         self.njets = 0
+
         if 'ptmin' in args and 'njets' in args:
             raise ValueError('cannot specify both ptmin and njets arguments')
+
         if 'ptmin' in args:
-            self.clusterizer = CCJetClusterizer(0)
+            self.clusterizer = CCJetClusterizer(0, self.cfg_ana.algorithm)
             def clusterize():
                 return self.clusterizer.make_inclusive_jets(args['ptmin']) 
             self.clusterize = clusterize
+
         elif 'njets' in args:
             self.njets = args['njets']
-            self.clusterizer = CCJetClusterizer(1)
+            self.clusterizer = CCJetClusterizer(1, self.cfg_ana.algorithm)
             def clusterize():
                 return self.clusterizer.make_exclusive_jets(self.njets) 
             self.clusterize = clusterize
+
         else:
             raise ValueError('specify either ptmin or njets') 
-        
+
     def validate(self, jet):
         constits = jet.constituents
         keys = set(jet.constituents.keys())
@@ -76,21 +84,20 @@ class JetClusterizer(Analyzer):
         if not keys.issubset(all_possible):
             print constits
             assert(False)
-        sume = 0. 
+        sume = 0.
         for component in jet.constituents.values():
             if component.e() - jet.e() > 1e-5:
                 import pdb; pdb.set_trace()
             sume += component.e()
         if jet.e() - sume > 1e-5:
             import pdb; pdb.set_trace()
-                
-                
+
     def process(self, event):
         '''Process event.
-        
+ 
         The event must contain:
          - self.cfg_ana.particles: the list of particles to be clustered
-         
+
         This method creates:
          - event.<self.cfg_ana.output>: the list of L{jets<heppy.particles.jet.Jet>}. 
         '''
@@ -102,7 +109,7 @@ class JetClusterizer(Analyzer):
                 # not enough particles for the required number of jets,
                 # making no jet
                 setattr(event, self.cfg_ana.output, [])
-                return True                
+                return True
 
             else:
                 # njets_required not provided, or njets_required set to True
