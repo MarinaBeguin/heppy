@@ -330,7 +330,7 @@ However, you may still iterate on your events using Loop.loop,
 possibly skipping a number of events at the beginning.
 '''.format(evclass=self.events.__class__)
             raise TypeError(msg)
-        self.event = Event(iEv, self.events[iEv], self.setup)            
+        self.event = Event(iEv, self.events[iEv], self.setup)
         self.iEvent = iEv
         return self._run_analyzers_on_event()
 
@@ -342,7 +342,7 @@ possibly skipping a number of events at the beginning.
             if not analyzer.beginLoopCalled:
                 analyzer.beginLoop(self.setup)
             start = timeit.default_timer()
-            if self.memReportFirstEvent >=0 and iEv >= self.memReportFirstEvent:           
+            if self.memReportFirstEvent >=0 and iEv >= self.memReportFirstEvent:
                 memNow=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
                 if memNow > self.memLast :
                     print  "Mem Jump detected before analyzer %s at event %s. RSS(before,after,difference) %s %s %s "%( analyzer.name, iEv, self.memLast, memNow, memNow-self.memLast)
@@ -364,7 +364,7 @@ possibly skipping a number of events at the beginning.
 ##                    )
                     pass
                 raise 
-            if self.memReportFirstEvent >=0 and iEv >= self.memReportFirstEvent:           
+            if self.memReportFirstEvent >=0 and iEv >= self.memReportFirstEvent:
                 memNow=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
                 if memNow > self.memLast :
                     print "Mem Jump detected in analyzer %s at event %s. RSS(before,after,difference) %s %s %s "%( analyzer.name, iEv, self.memLast, memNow, memNow-self.memLast)
@@ -372,11 +372,11 @@ possibly skipping a number of events at the beginning.
             if self.timeReport:
                 self.timeReport[i]['events'] += 1
                 if self.timeReport[i]['events'] > 0:
-                    self.timeReport[i]['time'] += timeit.default_timer() - start                  
+                    self.timeReport[i]['time'] += timeit.default_timer() - start
             if ret == False:
                 return (False, analyzer.name)
             else:
-                self.analyzer_counter.inc(analyzer.name)                
+                self.analyzer_counter.inc(analyzer.name)
         return (True, analyzer.name)
 
     def write(self):
@@ -424,7 +424,7 @@ if __name__ == '__main__':
         cfg.config.components=[comp]
         events_class = cfg.config.events_class
 
-    looper = Looper( 'Loop', cfg.config,nPrint = 5)
+    looper = Looper( 'Loop', cfg.config,nPrint = 100)
     looper.loop()
     looper.write()
 
